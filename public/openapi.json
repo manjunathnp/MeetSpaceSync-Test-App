@@ -1,0 +1,1121 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "MeetSpaceSync API",
+    "version": "1.0.0",
+    "description": "Meeting Room Booking API for UI and API automation practice. 3 Buildings, 25 Floors and 125 uniquely named Meeting Rooms. Reading and writing both need a Bearer token, so press Authorize first. Every error uses one envelope: { \"error\": { \"code\", \"message\", \"details?\" } }. Field level problems arrive as details.fieldErrors, for example { \"bookingDate\": \"Choose a valid Booking Date.\" }. Every change that alters a Booking or a Meeting Room must carry a reason of at least 5 characters after trimming; each one is appended to an auditTrail that is never overwritten."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:4300/api",
+      "description": "Local demo server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Connection check"
+    },
+    {
+      "name": "Authentication",
+      "description": "Bearer token, API key and Basic auth"
+    },
+    {
+      "name": "Campus",
+      "description": "Buildings and campus counts"
+    },
+    {
+      "name": "Meeting Rooms",
+      "description": "Browse and administer Meeting Rooms"
+    },
+    {
+      "name": "Bookings",
+      "description": "Create, update, cancel and check Bookings"
+    },
+    {
+      "name": "Administration",
+      "description": "Demo data control"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      },
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    },
+    "schemas": {
+      "Login": {
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "admin"
+          },
+          "password": {
+            "type": "string",
+            "example": "admin123"
+          }
+        }
+      },
+      "Booking": {
+        "type": "object",
+        "required": [
+          "meetingTitle",
+          "blockId",
+          "floor",
+          "roomId",
+          "bookingDate",
+          "startClock",
+          "endClock",
+          "attendees"
+        ],
+        "properties": {
+          "meetingTitle": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 80,
+            "example": "Sprint Planning"
+          },
+          "blockId": {
+            "type": "string",
+            "enum": [
+              "VERTEX",
+              "APEX",
+              "NEXUS"
+            ],
+            "example": "VERTEX"
+          },
+          "floor": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "roomId": {
+            "type": "string",
+            "description": "Must belong to the chosen Building and Floor and must be ACTIVE.",
+            "example": "VERTEX-F01-R01"
+          },
+          "bookingDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Calendar date in YYYY-MM-DD. Must not be in the past. The Try it out box is prefilled with tomorrow's date.",
+            "example": "2026-08-01",
+            "x-dynamic": "tomorrow"
+          },
+          "startClock": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$",
+            "description": "24 hour clock, HH:MM.",
+            "example": "10:00"
+          },
+          "endClock": {
+            "type": "string",
+            "pattern": "^\\d{2}:\\d{2}$",
+            "description": "24 hour clock, HH:MM. Later than startClock and at most 4 hours after it.",
+            "example": "11:00"
+          },
+          "attendees": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Cannot exceed the capacity of the chosen Meeting Room.",
+            "example": 4
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 300,
+            "example": "Bring the sprint board.",
+            "description": "Optional. Rejected above 300 characters with details.fieldErrors.notes."
+          },
+          "updateComment": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 300,
+            "description": "Required on PUT. Why the Booking is changing. At least 5 characters after trimming. Ignored on POST.",
+            "example": "Two more people joining the sprint review."
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "example": "VALIDATION_ERROR"
+              },
+              "message": {
+                "type": "string",
+                "example": "Please correct the highlighted fields."
+              },
+              "details": {
+                "type": "object",
+                "example": {
+                  "fieldErrors": {
+                    "bookingDate": "Choose a valid Booking Date."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "AuditEntry": {
+        "type": "object",
+        "description": "One entry in an append-only history. Earlier entries are never modified.",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "UPDATED",
+              "CANCELLED",
+              "DEACTIVATED",
+              "ACTIVATED"
+            ],
+            "example": "UPDATED"
+          },
+          "comment": {
+            "type": "string",
+            "example": "Two more people joining the sprint review."
+          },
+          "by": {
+            "type": "string",
+            "example": "USR-USER"
+          },
+          "byName": {
+            "type": "string",
+            "example": "Standard User"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-01T04:30:00.000Z"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "No token, or the token has expired. Press Authorize and sign in.",
+        "content": {
+          "application/json": {
+            "example": {
+              "error": {
+                "code": "UNAUTHORIZED",
+                "message": "Sign in or provide a valid Bearer token."
+              }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Administrator access is required.",
+        "content": {
+          "application/json": {
+            "example": {
+              "error": {
+                "code": "FORBIDDEN",
+                "message": "Admin access is required for this action."
+              }
+            }
+          }
+        }
+      },
+      "BookingValidation": {
+        "description": "One or more fields failed validation. Read details.fieldErrors for the exact field and message.",
+        "content": {
+          "application/json": {
+            "example": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Please correct the highlighted fields.",
+                "details": {
+                  "fieldErrors": {
+                    "bookingDate": "Choose a valid Booking Date."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "An unexpected fault. The request is answered rather than dropped.",
+        "content": {
+          "application/json": {
+            "example": {
+              "error": {
+                "code": "INTERNAL_ERROR",
+                "message": "The server could not complete this request."
+              }
+            }
+          }
+        }
+      },
+      "CommentRequired": {
+        "description": "The change was refused because no usable reason was supplied.",
+        "content": {
+          "application/json": {
+            "example": {
+              "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Please correct the highlighted fields.",
+                "details": {
+                  "fieldErrors": {
+                    "updateComment": "Reason for Update must contain at least 5 characters."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/ping": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Check API connection",
+        "description": "Open endpoint. No token needed. Returns the app name, version and the current Meeting Room and Booking counts.",
+        "responses": {
+          "200": {
+            "description": "API is available",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "UP",
+                  "app": "MeetSpaceSync",
+                  "version": "1.0.0",
+                  "rooms": 125,
+                  "bookings": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Sign in and receive a Bearer token",
+        "description": "Use admin/admin123 for full access or user/user123 for standard access. The Authorize button calls this endpoint and stores the token for you.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "content": {
+              "application/json": {
+                "example": {
+                  "token": "eyJhbGciOi...",
+                  "user": {
+                    "id": "USR-ADMIN",
+                    "username": "admin",
+                    "name": "Administrator",
+                    "role": "ADMIN"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "INVALID_CREDENTIALS",
+                    "message": "The Username or Password is incorrect."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get the signed-in user",
+        "description": "Returns the token payload, including sub (the user id) and role.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/auth/apikey": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Check an API key header",
+        "description": "Practice endpoint for header based authentication. Send X-API-Key: meetspacesync-key-2026.",
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "meetspacesync-key-2026"
+            },
+            "description": "The demo API key"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Key accepted",
+            "content": {
+              "application/json": {
+                "example": {
+                  "authenticated": true,
+                  "method": "api-key"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Key missing or wrong",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "INVALID_API_KEY",
+                    "message": "That API key is not valid."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/basic": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Check HTTP Basic credentials",
+        "description": "Practice endpoint for Basic authentication. Use meetspace / basic123.",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credentials accepted",
+            "content": {
+              "application/json": {
+                "example": {
+                  "authenticated": true,
+                  "method": "basic",
+                  "user": "meetspace"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credentials missing or wrong"
+          }
+        },
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "Basic bWVldHNwYWNlOmJhc2ljMTIz"
+            },
+            "description": "Basic base64(meetspace:basic123)"
+          }
+        ]
+      }
+    },
+    "/overview": {
+      "get": {
+        "tags": [
+          "Campus"
+        ],
+        "summary": "Get campus counts",
+        "description": "Open endpoint. Useful as a quick sanity check before a suite runs.",
+        "responses": {
+          "200": {
+            "description": "Counts",
+            "content": {
+              "application/json": {
+                "example": {
+                  "buildings": 3,
+                  "floors": 25,
+                  "rooms": 125,
+                  "activeRooms": 125,
+                  "bookings": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/blocks": {
+      "get": {
+        "tags": [
+          "Campus"
+        ],
+        "summary": "List Buildings",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Buildings",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "VERTEX",
+                    "name": "Vertex",
+                    "floors": 10
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/rooms": {
+      "get": {
+        "tags": [
+          "Meeting Rooms"
+        ],
+        "summary": "List or filter Meeting Rooms",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "VERTEX",
+                "APEX",
+                "NEXUS"
+              ]
+            },
+            "description": "Filter by Building"
+          },
+          {
+            "name": "floor",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter by Floor number"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "INACTIVE"
+              ]
+            },
+            "description": "Filter by Room status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meeting Rooms",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "VERTEX-F01-R01",
+                    "code": "V-01-01",
+                    "name": "Nova",
+                    "blockId": "VERTEX",
+                    "blockName": "Vertex",
+                    "floor": 1,
+                    "capacity": 8,
+                    "amenities": [
+                      "Display",
+                      "Whiteboard",
+                      "Video Call",
+                      "Wi-Fi"
+                    ],
+                    "status": "ACTIVE"
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/rooms/{roomId}": {
+      "get": {
+        "tags": [
+          "Meeting Rooms"
+        ],
+        "summary": "Get one Meeting Room",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "VERTEX-F01-R01"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meeting Room"
+          },
+          "404": {
+            "description": "Meeting Room not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Meeting Rooms"
+        ],
+        "summary": "Activate or deactivate a Meeting Room",
+        "description": "Administrator only. Deactivation needs a reason of at least 5 characters and fails with 409 while the Room still has an active future Booking. Activation needs no reason. Both are appended to auditTrail, so the reason a Room was taken out of service survives it being brought back.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "VERTEX-F01-R01"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVE",
+                      "INACTIVE"
+                    ],
+                    "example": "INACTIVE"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "Required when status is INACTIVE. Stored in the Room audit history.",
+                    "example": "Projector replacement and electrical maintenance."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated Meeting Room"
+          },
+          "400": {
+            "description": "Status invalid, or the Deactivation Comment is missing",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Enter a Deactivation Comment.",
+                    "details": {
+                      "fieldErrors": {
+                        "reason": "Deactivation Comment is required."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "description": "The Meeting Room has future active Bookings. Cancel them first.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "ROOM_HAS_FUTURE_BOOKINGS",
+                    "message": "This Meeting Room has future Bookings. Cancel them with a Cancellation Comment before deactivating the Room.",
+                    "details": {
+                      "bookingIds": [
+                        "BKG-1770000000000"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/availability": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Check whether a Meeting Room is free for a time slot",
+        "description": "The Book a Room form calls this while the user fills the form, so the clash is shown before Confirm Booking is pressed. Pass ignoreBookingId when editing an existing Booking. An INACTIVE Meeting Room is reported as available=false with roomStatus INACTIVE, matching what POST /bookings does with the same values.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "VERTEX-F01-R01"
+            }
+          },
+          {
+            "name": "bookingDate",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "YYYY-MM-DD"
+          },
+          {
+            "name": "startClock",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "10:00"
+            }
+          },
+          {
+            "name": "endClock",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "11:00"
+            }
+          },
+          {
+            "name": "ignoreBookingId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Booking to exclude while editing"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Availability result",
+            "content": {
+              "application/json": {
+                "example": {
+                  "roomId": "VERTEX-F01-R01",
+                  "roomName": "Nova",
+                  "roomCode": "V-01-01",
+                  "roomStatus": "ACTIVE",
+                  "bookingDate": "2026-08-01",
+                  "startClock": "10:00",
+                  "endClock": "11:00",
+                  "available": false,
+                  "message": "Nova is already booked during this time.",
+                  "conflicts": [
+                    {
+                      "id": "BKG-1770000000000",
+                      "meetingTitle": "Sprint Planning",
+                      "startTime": "2026-08-01T04:30:00.000Z",
+                      "endTime": "2026-08-01T05:30:00.000Z",
+                      "createdByName": "Administrator"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BookingValidation"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/bookings": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "List Bookings",
+        "description": "Bookings created by any account are visible to every signed-in account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by Meeting Room"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BOOKED",
+                "CANCELLED"
+              ]
+            },
+            "description": "Filter by status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bookings"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Create a Booking",
+        "description": "The Try it out body below is prefilled with tomorrow's date so the request succeeds on the first attempt. Rejected with 400 VALIDATION_ERROR and details.fieldErrors: a past date, an end time not after the start, a duration over 4 hours, attendees above the Room capacity, a Meeting Title outside 3 to 80 characters, notes over 300 characters, an inactive Room, a Room that does not belong to the chosen Building and Floor, or an overlapping slot. Times must be HH:MM on a 24 hour clock and the date must be a real calendar date, so 99:99 and 2026-02-30 are each reported against their own field.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Booking"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Booking created"
+          },
+          "400": {
+            "$ref": "#/components/responses/BookingValidation"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/bookings/{bookingId}": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Get one Booking",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking"
+          },
+          "404": {
+            "description": "Booking not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Update a Booking",
+        "description": "A Standard User can update only a Booking they created. An Administrator can update any Booking. updateComment is required and must be at least 5 characters after trimming; it is appended to auditTrail.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Booking"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Booking updated"
+          },
+          "400": {
+            "$ref": "#/components/responses/CommentRequired"
+          },
+          "403": {
+            "description": "You can update only your own Booking."
+          },
+          "404": {
+            "description": "Booking not found"
+          },
+          "409": {
+            "description": "The Booking is cancelled and can no longer be updated.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "BOOKING_CANCELLED",
+                    "message": "A cancelled Booking cannot be updated. Create a new Booking instead."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Cancel a Booking",
+        "description": "Both roles must send a Cancellation Comment in reason, at least 5 characters after trimming. A Standard User can cancel only their own Booking. The comment is appended to auditTrail.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 5,
+                    "maxLength": 300,
+                    "description": "Required for every account. Why the Booking is being cancelled.",
+                    "example": "Room closed for planned maintenance."
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Booking cancelled"
+          },
+          "400": {
+            "description": "The Cancellation Comment is missing or too short.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Enter a Cancellation Comment.",
+                    "details": {
+                      "fieldErrors": {
+                        "reason": "Cancellation Comment is required."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You can cancel only your own Booking."
+          },
+          "409": {
+            "description": "Booking is already cancelled."
+          }
+        }
+      }
+    },
+    "/reset": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Reset Demo Data",
+        "description": "Administrator only. Removes every Booking and restores the seeded 125 Meeting Rooms. Run it before a suite so each run starts identical.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reset completed",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Demo data restored.",
+                  "rooms": 125,
+                  "bookings": 0
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    }
+  }
+}

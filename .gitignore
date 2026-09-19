@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Runtime data and logs
+data.json
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# QA and test artifacts
+QA-REPORT.md
+qa-report*.md
+coverage/
+test-results/
+playwright-report/
+screenshots/
+videos/
+*.trace.zip
+
+# Local tooling and editor state
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Temporary files
+.cache/
+.tmp/
+tmp/
+temp/
+*.tmp

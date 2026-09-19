@@ -1,0 +1,31 @@
+id,code,name,building,floor,capacity,amenities,status
+VERTEX-F01-R01,V-01-01,Nova,Vertex,1,8,"Display; Whiteboard; Video Call; Wi-Fi",ACTIVE
+VERTEX-F01-R02,V-01-02,Orbit,Vertex,1,10,"Display; Whiteboard",ACTIVE
+VERTEX-F01-R03,V-01-03,Quantum,Vertex,1,12,"Display; Whiteboard; Video Call",ACTIVE
+VERTEX-F01-R04,V-01-04,Vector,Vertex,1,4,"Display; Whiteboard; Video Call; Wi-Fi",ACTIVE
+VERTEX-F01-R05,V-01-05,Pixel,Vertex,1,6,"Display; Whiteboard",ACTIVE
+VERTEX-F02-R01,V-02-01,Cosmos,Vertex,2,10,"Display; Whiteboard",ACTIVE
+VERTEX-F02-R02,V-02-02,Astro,Vertex,2,12,"Display; Whiteboard; Video Call",ACTIVE
+VERTEX-F02-R03,V-02-03,Nebula,Vertex,2,4,"Display; Whiteboard; Video Call; Wi-Fi",ACTIVE
+VERTEX-F02-R04,V-02-04,Photon,Vertex,2,6,"Display; Whiteboard",ACTIVE
+VERTEX-F02-R05,V-02-05,Comet,Vertex,2,8,"Display; Whiteboard; Video Call",ACTIVE
+VERTEX-F03-R01,V-03-01,Lunar,Vertex,3,12,"Display; Whiteboard; Video Call",ACTIVE
+VERTEX-F03-R02,V-03-02,Solaris,Vertex,3,4,"Display; Whiteboard; Video Call; Wi-Fi",ACTIVE
+VERTEX-F03-R03,V-03-03,Galaxy,Vertex,3,6,"Display; Whiteboard",ACTIVE
+VERTEX-F03-R04,V-03-04,Meteor,Vertex,3,8,"Display; Whiteboard; Video Call",ACTIVE
+VERTEX-F03-R05,V-03-05,Zenith,Vertex,3,10,"Display; Whiteboard; Video Call; Wi-Fi",ACTIVE
+VERTEX-F04-R01,V-04-01,Eclipse,Vertex,4,4,"Display; Whiteboard; Video Call; Wi-Fi",ACTIVE
+VERTEX-F04-R02,V-04-02,Stellar,Vertex,4,6,"Display; Whiteboard",ACTIVE
+VERTEX-F04-R03,V-04-03,Pulsar,Vertex,4,8,"Display; Whiteboard; Video Call",ACTIVE
+VERTEX-F04-R04,V-04-04,Voyager,Vertex,4,10,"Display; Whiteboard; Video Call; Wi-Fi",ACTIVE
+VERTEX-F04-R05,V-04-05,Helix,Vertex,4,12,"Display; Whiteboard",ACTIVE
+VERTEX-F05-R01,V-05-01,Aurora,Vertex,5,6,"Display; Whiteboard",ACTIVE
+VERTEX-F05-R02,V-05-02,Kepler,Vertex,5,8,"Display; Whiteboard; Video Call",ACTIVE
+VERTEX-F05-R03,V-05-03,Apollo,Vertex,5,10,"Display; Whiteboard; Video Call; Wi-Fi",ACTIVE
+VERTEX-F05-R04,V-05-04,Vega,Vertex,5,12,"Display; Whiteboard",ACTIVE
+VERTEX-F05-R05,V-05-05,Sirius,Vertex,5,4,"Display; Whiteboard; Video Call",ACTIVE
+VERTEX-F06-R01,V-06-01,Matrix,Vertex,6,8,"Display; Whiteboard; Video Call",ACTIVE
+VERTEX-F06-R02,V-06-02,Grid,Vertex,6,10,"Display; Whiteboard; Video Call; Wi-Fi",ACTIVE
+VERTEX-F06-R03,V-06-03,Circuit,Vertex,6,12,"Display; Whiteboard",ACTIVE
+VERTEX-F06-R04,V-06-04,Network,Vertex,6,4,"Display; Whiteboard; Video Call",ACTIVE
+VERTEX-F06-R05,V-06-05,Link,Vertex,6,6,"Display; Whiteboard; Video Call; Wi-Fi",ACTIVE

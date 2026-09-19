@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<meta name="theme-color" content="#030914" />
+<title>MeetSpaceSync</title>
+<link rel="icon" type="image/png" sizes="256x256" href="/assets/meetspacesync-icon.png" />
+<link rel="apple-touch-icon" href="/assets/meetspacesync-icon.png" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<div class="app-shell">
+
+  <header class="topbar">
+    <a class="brand" href="#/dashboard" data-testid="app-brand">
+      <img class="brand-mark" src="/assets/meetspacesync-icon.png" alt="" width="38" height="38" />
+      <span><strong>MeetSpaceSync</strong><small>Meeting Room Booking</small></span>
+    </a>
+
+    <nav id="nav" class="nav" data-testid="main-nav">
+      <a class="nav-link auth-only hidden" data-route="dashboard" href="#/dashboard" data-testid="nav-dashboard">Overview</a>
+      <a class="nav-link auth-only hidden" data-route="book" href="#/book" data-testid="nav-book">Book a Room</a>
+      <a class="nav-link auth-only hidden" data-route="bookings" href="#/bookings" data-testid="nav-bookings">Bookings</a>
+      <a class="nav-link auth-only hidden" data-route="rooms" href="#/rooms" data-testid="nav-rooms">Meeting Rooms</a>
+      <a class="nav-link auth-only hidden" data-route="playground" href="#/playground" data-testid="nav-playground">Playground</a>
+      <a class="nav-link external guest-only hidden" href="/#/playground" target="_blank" rel="noopener" data-testid="nav-playground-guest">Playground</a>
+      <a class="nav-link external" href="/docs" target="_blank" rel="noopener" data-testid="nav-api-docs">API Docs</a>
+    </nav>
+
+    <div class="top-actions">
+      <span id="userChip" class="user-chip hidden" data-testid="user-chip"></span>
+      <button id="logout" class="btn ghost sm hidden" data-testid="logout">Sign Out</button>
+      <button class="gear-btn" data-testid="settings-open" title="Settings" aria-label="Open settings" id="gearBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <section id="loginView" class="login-layout hidden">
+      <div class="login-copy">
+        <img class="hero-logo" src="/assets/meetspacesync-logo-dark.png" alt="MeetSpaceSync" width="210" height="210" />
+        <span class="eyebrow hero-eyebrow">UI + API Automation Playground</span>
+        <h1>Book the right Room.<br><span>Without the Friction.</span></h1>
+        <p>A clean Demo workspace for practising reliable end-to-end UI and API automation across 100+ Meeting Rooms.</p>
+        <div class="mini-stats">
+          <span><b>3</b> Buildings</span>
+          <span><b>25</b> Floors</span>
+          <span><b>100+</b> Meeting Rooms</span>
+        </div>
+        <div class="login-links">
+          <a class="btn secondary" href="/docs" target="_blank" rel="noopener" data-testid="login-api-docs">Open the API Docs</a>
+          <a class="btn ghost" href="/openapi.json" target="_blank" rel="noopener" data-testid="login-openapi">View openapi.json</a>
+        </div>
+      </div>
+
+      <div class="login-card">
+        <div class="login-head">
+          <img class="brand-mark large" src="/assets/meetspacesync-icon.png" alt="" width="54" height="54" />
+          <div><h2>Welcome back</h2><p data-testid="login-head-note">Sign in with a Demo Account.</p></div>
+        </div>
+        <div id="loginBanner" class="alert error hidden" data-testid="login-banner" role="alert"></div>
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" data-testid="username" autocomplete="off" />
+          <small id="usernameError" class="field-error" data-testid="username-error"></small>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="password-wrap">
+            <input id="password" type="text" class="masked" data-testid="password" autocomplete="off" data-lpignore="true" data-1p-ignore="true" />
+            <button id="togglePassword" class="peek" type="button" data-testid="toggle-password">Show</button>
+          </div>
+          <small id="passwordError" class="field-error" data-testid="password-error"></small>
+        </div>
+        <button id="loginButton" class="btn primary full" data-testid="login-submit">Sign In</button>
+        <div class="demo-accounts">
+          <button data-fill="user" data-testid="fill-user"><b>Standard User</b><span>user / user123</span></button>
+          <button data-fill="admin" data-testid="fill-admin"><b>Administrator</b><span>admin / admin123</span></button>
+        </div>
+        <p class="login-foot-note">Prefer the API first? The <a href="/docs" target="_blank" rel="noopener" data-testid="login-card-api-docs">API Docs</a> open in a new tab and carry the same Settings panel.</p>
+      </div>
+    </section>
+
+    <section id="appView" class="hidden"><div id="page"></div></section>
+  </main>
+
+  <footer data-testid="app-footer">
+    <span class="footer-item">Demo App for UI &amp; API Automation</span>
+    <span class="footer-sep" aria-hidden="true"></span>
+    <span class="footer-item">Conceptualised and Developed by <b>Manjunath N P</b> <span class="footer-pipe">|</span> <a href="https://www.linkedin.com/in/manjunathnp/" target="_blank" rel="noopener">linkedin.com/in/manjunathnp</a></span>
+  </footer>
+</div>
+
+<!-- settings drawer: the same controls, markup and test ids as the API Docs -->
+<div class="drawer-scrim" id="drawerScrim"></div>
+<aside class="drawer" id="drawer" data-testid="settings-drawer" aria-label="Settings">
+  <div class="d-head">
+    <h3>Settings</h3>
+    <button class="x" data-testid="settings-close" aria-label="Close settings" id="drawerClose">&times;</button>
+  </div>
+  <div class="d-body">
+    <div class="d-sec">
+      <h4>Environment</h4>
+      <label class="field-lbl" for="baseUrl">API base URL</label>
+      <input class="field-inp" id="baseUrl" data-testid="base-url-input" spellcheck="false" autocomplete="off" />
+      <button class="btn-drawer" data-testid="settings-test-api" id="testApiBtn">Test connection (GET /api/ping)</button>
+      <div class="d-status" id="pingStatus" data-testid="ping-status" aria-live="polite"></div>
+    </div>
+    <div class="d-sec">
+      <h4>Demo data</h4>
+      <button class="btn-drawer" data-testid="settings-reset" id="resetBtn">Reset demo data (POST /api/reset)</button>
+      <p class="hint">Removes all Bookings and restores the seeded 125 Meeting Rooms. Run it before a suite so every run starts identical. Administrator sign in is required.</p>
+      <div class="d-status" id="resetStatus" data-testid="reset-status" aria-live="polite"></div>
+    </div>
+    <div class="d-sec">
+      <h4>Credentials</h4>
+      <button class="btn-drawer" data-testid="settings-show-creds" id="credsBtn">Show credentials</button>
+      <div id="credsArea" hidden style="margin-top:10px">
+        <div class="credchip"><span><b>Admin (full access)</b><code>admin / admin123</code></span><button class="copy" data-testid="copy-admin">Copy</button></div>
+        <div class="credchip"><span><b>User (booking access)</b><code>user / user123</code></span><button class="copy" data-testid="copy-user">Copy</button></div>
+        <div class="credchip"><span><b>API key header</b><code>X-API-Key: meetspacesync-key-2026</code></span><button class="copy" data-testid="copy-apikey">Copy</button></div>
+        <div class="credchip"><span><b>Basic auth</b><code>meetspace / basic123</code></span><button class="copy" data-testid="copy-basic">Copy</button></div>
+      </div>
+    </div>
+    <div class="d-sec">
+      <h4>App</h4>
+      <a class="btn-drawer" href="/docs" target="_blank" rel="noopener" data-testid="settings-open-app" style="text-decoration:none">Open the API Docs</a>
+      <p class="hint">The API Docs carry this same settings panel, so you can reset and test from either side.</p>
+    </div>
+  </div>
+</aside>
+
+<div id="modalRoot"></div>
+<div id="toastStack" class="toast-stack" data-testid="toast-stack" aria-live="polite"></div>
+<script src="/app.js"></script>
+</body>
+</html>

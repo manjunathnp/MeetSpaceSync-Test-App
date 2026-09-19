@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#030914" />
+<title>MeetSpaceSync · API Reference</title>
+<link rel="icon" type="image/png" sizes="256x256" href="/assets/meetspacesync-icon.png" />
+<link rel="apple-touch-icon" href="/assets/meetspacesync-icon.png" />
+<style>
+  :root{
+    --get:#4f78e8;--get-bg:rgba(79,120,232,.08);
+    --post:#1d9d6a;--post-bg:rgba(29,157,106,.08);
+    --put:#d98a1f;--put-bg:rgba(217,138,31,.08);
+    --patch:#7c53c9;--patch-bg:rgba(124,83,201,.08);
+    --delete:#d4453a;--delete-bg:rgba(212,69,58,.08);
+    --ink:#171e2e;--ink-2:#4a5468;--muted:#8b94a7;--line:#e4e7ee;--line-2:#d3d8e4;
+    --brand:#2a3aa8;--brand-deep:#1e2b82;--brand-ink:#141c52;--brand-soft:#e8ebfa;
+    --amber:#e8b64c;--ok:#1d7a4f;--danger:#b23227;
+    --paper:#f3f4f8;--sidebar:#f9fafc;
+    --mono:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;
+    --shadow-lg:0 24px 60px rgba(20,28,82,.28);
+  }
+  *{box-sizing:border-box}html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:#fff;font-size:14px;line-height:1.55}
+  code,pre,.mono{font-family:var(--mono)}
+  a{text-decoration:none;color:inherit}
+  :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+
+  /* topbar mirrors the app header */
+  .topbar{background:var(--brand-ink);padding:0 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;height:58px}
+  .topbar .logo{color:#fff;font-weight:800;font-size:16px;display:flex;align-items:center;gap:10px;white-space:nowrap}
+  .topbar .logo em{font-style:normal;color:var(--amber)}
+  .topbar .logo .mark{width:30px;height:30px;display:block;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(23,141,235,.28))}
+  .topbar .crumb{color:#8f99cf;font-size:13px;font-weight:600;white-space:nowrap}
+  .topbar .spacer{flex:1}
+  .app-link{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:8px;border:1px solid rgba(255,255,255,.22);font-size:13px;font-weight:600;color:#dfe4f7;white-space:nowrap;transition:border-color .15s,color .15s}
+  .app-link:hover{border-color:var(--amber);color:#fff}
+  .app-link svg{width:14px;height:14px}
+  .authorize{background:transparent;color:#fff;border:2px solid #2fae79;border-radius:8px;padding:7px 16px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .authorize.on{background:#1d9d6a;border-color:#1d9d6a}
+  .authorize .lock{width:14px;height:14px}
+  .gear-btn{width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:transparent;color:#dfe4f7;display:grid;place-items:center;cursor:pointer}
+  .gear-btn:hover{border-color:#fff;color:#fff}
+  .gear-btn svg{width:17px;height:17px}
+
+  .layout{display:flex;align-items:flex-start}
+  .sidebar{width:240px;min-width:240px;background:var(--sidebar);border-right:1px solid var(--line);height:calc(100vh - 58px);position:sticky;top:58px;overflow-y:auto;padding:18px 0}
+  .sidebar .filter{padding:0 16px 12px}
+  .sidebar .filter input{width:100%;padding:8px 11px;border:1px solid var(--line-2);border-radius:8px;font-size:13px;font-family:inherit}
+  .sidebar a.navlink{display:flex;align-items:center;gap:8px;padding:7px 16px;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer}
+  .sidebar a.navlink:hover{background:var(--brand-soft);color:var(--brand-deep)}
+  .sidebar a.navlink .count{margin-left:auto;background:#e6e9f2;color:var(--ink-2);border-radius:10px;font-size:11px;padding:0 7px;font-weight:700}
+  .main{flex:1;min-width:0;padding:28px 34px 90px;max-width:1080px}
+  .info h1{font-size:29px;margin:2px 0 8px;font-weight:800;letter-spacing:-.4px}
+  .info .version{display:inline-block;background:var(--brand);color:#fff;font-size:12px;border-radius:50px;padding:2px 12px;margin-left:10px;vertical-align:middle;font-weight:700}
+  .info .desc{margin:6px 0 4px;max-width:900px;color:var(--ink-2)}
+  .info .base{color:var(--muted);font-size:13px;margin-top:6px}
+  .info .base b{color:var(--ink)}
+  .info .base a{color:var(--brand);font-weight:600}
+  .info .base a:hover{text-decoration:underline}
+  .starthere{border:1px solid #ccd4f0;background:#f3f5fd;border-radius:12px;padding:18px 20px;margin:20px 0 8px}
+  .starthere h3{margin:0 0 8px;color:var(--brand-deep);font-size:15px}
+  .starthere ol{margin:0;padding-left:20px}.starthere li{margin:5px 0}
+  .starthere .pill{display:inline-block;background:#1d9d6a;color:#fff;border-radius:5px;font-size:11px;padding:1px 7px;font-weight:700}
+  .rules{border:1px solid #f0dfba;background:#fdf8ec;border-radius:12px;padding:16px 20px;margin:14px 0 8px}
+  .rules h3{margin:0 0 8px;color:#946200;font-size:14px}
+  .rules ul{margin:0;padding-left:20px}.rules li{margin:4px 0;font-size:13.5px}
+  .rules code{background:#fff;border:1px solid #efe2c2;border-radius:5px;padding:1px 6px;font-size:12px}
+
+  .tag-section{margin-top:28px;scroll-margin-top:76px}
+  .tag-head{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:7px;cursor:pointer}
+  .tag-head h2{font-size:21px;margin:0;font-weight:800}
+  .tag-head .tag-desc{color:var(--muted);font-size:13px;margin-left:4px}
+  .tag-head .chev{margin-left:auto;color:var(--muted);transition:transform .15s}
+  .tag-section.collapsed .chev{transform:rotate(-90deg)}.tag-section.collapsed .op{display:none}
+  .op{border:1px solid;border-radius:10px;margin:9px 0;overflow:hidden}
+  .op.get{border-color:var(--get);background:var(--get-bg)}
+  .op.post{border-color:var(--post);background:var(--post-bg)}
+  .op.put{border-color:var(--put);background:var(--put-bg)}
+  .op.patch{border-color:var(--patch);background:var(--patch-bg)}
+  .op.delete{border-color:var(--delete);background:var(--delete-bg)}
+  .op-head{display:flex;align-items:center;gap:12px;padding:9px 13px;cursor:pointer}
+  .verb{color:#fff;font-weight:700;font-size:12px;letter-spacing:.04em;padding:6px 0;border-radius:6px;min-width:74px;text-align:center;text-transform:uppercase}
+  .op.get .verb{background:var(--get)}.op.post .verb{background:var(--post)}.op.put .verb{background:var(--put)}.op.patch .verb{background:var(--patch)}.op.delete .verb{background:var(--delete)}
+  .op-path{font-family:var(--mono);font-weight:700;font-size:13.5px;white-space:nowrap}
+  .op-sum{opacity:.75;margin-left:auto;text-align:right;font-size:13px}
+  .op-lock{width:15px;height:15px;opacity:.55;flex-shrink:0}
+  .op-body{display:none;background:#fff;border-top:1px solid var(--line);padding:18px}.op-body.open{display:block}
+  .op-desc{margin-bottom:12px;color:var(--ink-2)}
+  .section-label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin:16px 0 7px}
+  table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+  table.tbl th,table.tbl td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.tbl th{color:var(--muted);font-weight:600;font-size:12px}
+  .pname{font-family:var(--mono);font-weight:700}
+  .req{color:var(--delete);font-size:11px;margin-left:4px;font-weight:700}
+  .ptype{color:var(--muted);font-size:12px;font-family:var(--mono)}
+  .schema-box{background:#1c2340;color:#dfe4f7;border-radius:8px;padding:13px;font-family:var(--mono);font-size:12.5px;overflow-x:auto;white-space:pre}
+  .resp-row{display:flex;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .resp-code{font-family:var(--mono);font-weight:700;min-width:44px}
+  .c2{color:var(--post)}.c3{color:var(--put)}.c4{color:var(--delete)}.c5{color:var(--delete)}
+  .tryout{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+  .btn{border:0;border-radius:8px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+  .btn-try{background:#fff;color:var(--ink-2);border:1px solid var(--line-2)}.btn-try.active{color:var(--ink);border-color:var(--brand)}
+  .btn-exec{background:var(--brand);color:#fff;width:100%;margin-top:10px}.btn-exec:hover{background:var(--brand-deep)}
+  .btn-clear{background:#fff;color:var(--ink-2);border:1px solid var(--line-2);margin-left:8px}
+  .try-fields{display:none;margin-top:10px}.try-fields.open{display:block}
+  .try-fields label{display:block;font-size:12px;color:var(--muted);margin:9px 0 3px;font-weight:600}
+  .try-fields input,.try-fields textarea{width:100%;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;font-family:var(--mono);font-size:13px}
+  .try-fields textarea{min-height:96px;resize:vertical}
+  .param-warn{color:var(--danger);font-size:13px;padding:8px 0}
+  .resp-out{margin-top:12px;display:none}.resp-out.open{display:block}
+  .status-line{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-bottom:6px}
+  .resp-box{background:#141c52;color:#dfe4f7;border-radius:8px;padding:13px;font-family:var(--mono);font-size:12.5px;overflow-x:auto;white-space:pre-wrap;max-height:360px;overflow-y:auto}
+  .footer-note{margin-top:44px;color:var(--ink-2);font-size:12.5px;border-top:1px solid var(--line);padding-top:18px;text-align:center}
+  .footer-note .l1{font-weight:700;color:var(--ink);display:block;margin-bottom:3px}
+  .footer-note a{color:var(--brand);font-weight:600}
+  .footer-note a:hover{text-decoration:underline}
+
+  /* modal */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(20,28,82,.42);z-index:100;align-items:center;justify-content:center;padding:20px}
+  .overlay.open{display:flex}
+  .modal{background:#fff;width:100%;max-width:440px;border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden}
+  .m-head{display:flex;align-items:center;padding:17px 22px;border-bottom:1px solid var(--line)}
+  .m-head h3{margin:0;font-size:18px;font-weight:800}.m-head .x{margin-left:auto;background:none;border:0;font-size:22px;color:var(--muted);cursor:pointer}
+  .m-body{padding:18px 22px}
+  .m-body label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px;font-weight:600}
+  .m-body input{width:100%;padding:9px 11px;border:1px solid var(--line-2);border-radius:8px;font-size:13px;font-family:var(--mono)}
+  .m-row{display:flex;gap:8px;margin-top:14px}
+  .m-row .btn{flex:1}
+  .btn-login{background:#1d9d6a;color:#fff}
+  .btn-secondary{background:var(--paper);color:var(--ink)}
+  .loginStatus{font-size:12.5px;color:var(--muted);margin-top:12px;min-height:1em}
+
+  /* settings drawer — identical design to the app UI */
+  .drawer-scrim{display:none;position:fixed;inset:0;background:rgba(20,28,82,.35);z-index:80}
+  .drawer-scrim.open{display:block}
+  .drawer{position:fixed;top:0;right:-380px;width:360px;max-width:92vw;height:100%;background:#fff;z-index:90;box-shadow:var(--shadow-lg);transition:right .22s ease;display:flex;flex-direction:column}
+  .drawer.open{right:0}
+  .drawer .d-head{display:flex;align-items:center;gap:10px;padding:20px 22px;border-bottom:1px solid var(--line)}
+  .drawer .d-head h3{margin:0;font-size:16px;font-weight:800;flex:1}
+  .drawer .d-head .x{background:none;border:0;font-size:22px;color:var(--muted);line-height:1;padding:2px 8px;border-radius:8px;cursor:pointer}
+  .drawer .d-head .x:hover{background:var(--paper);color:var(--ink)}
+  .drawer .d-body{padding:20px 22px;overflow-y:auto;flex:1}
+  .d-sec{margin-bottom:26px}
+  .d-sec h4{margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted)}
+  .d-sec .hint{font-size:12.5px;color:var(--ink-2);margin:8px 0 0}
+  .d-sec .field-lbl{display:block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px}
+  .d-sec input.field-inp{width:100%;padding:9px 12px;border:1px solid var(--line-2);border-radius:9px;font-size:13px;font-family:var(--mono);margin-bottom:10px}
+  .btn-drawer{width:100%;justify-content:center;display:inline-flex;align-items:center;background:#fff;color:var(--ink);border:1px solid var(--line-2);border-radius:9px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+  .btn-drawer:hover{border-color:var(--brand);color:var(--brand)}
+  .credchip{display:flex;justify-content:space-between;align-items:center;background:var(--paper);border:1px solid var(--line-2);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px}
+  .credchip b{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);display:block;margin-bottom:2px;font-weight:700}
+  .credchip code{font-size:12.5px}
+  .credchip .copy{background:none;border:1px solid var(--line-2);border-radius:7px;padding:4px 10px;font-size:11.5px;font-weight:700;color:var(--ink-2);cursor:pointer}
+  .credchip .copy:hover{border-color:var(--brand);color:var(--brand)}
+  .d-status{font-size:12.5px;font-weight:600;margin-top:10px;min-height:18px}
+  .d-status.ok{color:var(--ok)}.d-status.err{color:var(--danger)}
+
+  @media (max-width:860px){.sidebar{display:none}.main{padding:18px}.topbar .crumb{display:none}.app-link span{display:none}}
+  .resp-sample{margin:6px 0 12px}
+  .rules .schema-box{white-space:pre;margin-top:6px}
+.connection-indicator{display:flex!important;align-items:center;gap:8px}.connection-indicator:before{content:"";width:10px;height:10px;border-radius:50%;background:#18a875;box-shadow:0 0 0 4px rgba(24,168,117,.14);flex:0 0 auto}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="/" data-testid="docs-brand">
+    <img class="mark" src="/assets/meetspacesync-icon.png" alt="" width="30" height="30" />
+    MeetSpaceSync
+  </a>
+  <span class="crumb">/ API Reference</span>
+  <div class="spacer"></div>
+  <a class="app-link" href="/" target="_blank" rel="noopener" data-testid="open-app-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg><span>Open the App</span>
+  </a>
+  <button class="authorize" id="authorizeBtn" data-testid="authorize-btn"><svg class="lock" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1a4 4 0 0 0-4 4v2H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1V5a4 4 0 0 0-4-4zm2 6H8V5a2 2 0 1 1 4 0v2z"/></svg><span> Authorize</span></button>
+  <button class="gear-btn" data-testid="settings-open" title="Settings" aria-label="Open settings" id="gear">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+  </button>
+</div>
+
+<div class="layout">
+  <aside class="sidebar"><div class="filter"><input id="filterInput" data-testid="docs-filter" placeholder="Filter endpoints…" /></div><div id="nav"></div></aside>
+  <main class="main">
+    <div class="info">
+      <h1 id="apiTitle">MeetSpaceSync API <span class="version" id="apiVersion"></span></h1>
+      <div class="desc" id="apiDesc"></div>
+      <div class="base">Base URL: <b id="baseShow">http://127.0.0.1:4300/api</b> &nbsp;·&nbsp; Spec: <a href="/openapi.json" target="_blank" rel="noopener">openapi.json</a> &nbsp;·&nbsp; App: <a href="/" target="_blank" rel="noopener" data-testid="base-app-link">open the UI</a></div>
+    </div>
+    <div class="starthere">
+      <h3>New to API testing? Start here</h3>
+      <ol>
+        <li><b>Start the server.</b> Run <code>node server.js</code>. The Base URL above should answer.</li>
+        <li><b>Get a token.</b> Click the green <span class="pill">Authorize</span> button, press "Log in as admin", then "Close". The username and password are already filled in for you.</li>
+        <li><b>Open an endpoint.</b> Click any row below to expand it and read what it does.</li>
+        <li><b>Try it.</b> Press "Try it out", then "Execute". Bodies are prefilled with working values, including a Booking Date set to tomorrow, so the first call succeeds.</li>
+      </ol>
+    </div>
+    <div class="rules" style="border-color:#ccd4f0;background:#f6f8ff">
+      <h3 style="color:#1e2b82">Every error uses the same envelope</h3>
+      <div class="schema-box" data-testid="error-envelope-example">{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Please correct the highlighted fields.",
+    "details": {
+      "fieldErrors": {
+        "bookingDate": "Choose a valid Booking Date."
+      }
+    }
+  }
+}</div>
+      <ul style="margin-top:10px">
+        <li><code>401 UNAUTHORIZED</code> means no token was sent. Press <b>Authorize</b> first.</li>
+        <li><code>400 VALIDATION_ERROR</code> carries <code>details.fieldErrors</code>, one entry per field that failed.</li>
+        <li><code>bookingDate</code> must be <code>YYYY-MM-DD</code> and cannot be in the past, which is why the sample body uses tomorrow.</li>
+      </ul>
+    </div>
+    <div class="rules"><h3>Business rules worth testing</h3><ul><li>Overlapping Bookings for the same Meeting Room return <code>400 VALIDATION_ERROR</code> with <code>details.fieldErrors.roomId</code>. Check the slot first with <code>GET /availability</code>.</li><li>An Administrator must provide a Cancellation Comment when cancelling a Booking.</li><li>A Meeting Room with a future active Booking returns <code>409 ROOM_HAS_FUTURE_BOOKINGS</code> when deactivation is attempted. Cancel the Booking first, then deactivate with a Deactivation Comment.</li><li>Attendee count cannot exceed Room capacity, Booking end time must be later than start time, and the duration cannot exceed 4 hours.</li><li><code>POST /reset</code> and <code>PATCH /rooms/{roomId}</code> need the admin account; the user account receives <code>403 FORBIDDEN</code>.</li></ul></div>
+    <div id="content"></div>
+    <div class="footer-note">
+      <span class="l1">Demo App for UI &amp; API Automation</span>
+      Conceptualised and Developed by Manjunath N P&nbsp;|&nbsp;<a href="https://www.linkedin.com/in/manjunathnp/" target="_blank" rel="noopener">linkedin.com/in/manjunathnp</a>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" data-testid="authorize-modal">
+    <div class="m-head"><h3>Authorize</h3><button class="x" id="modalClose">&times;</button></div>
+    <div class="m-body">
+      <p style="margin:0 0 6px">Reading and writing both need a token. The demo credentials are already filled in, so just press <b>Log in as admin</b> and then <b>Close</b>. The token is applied to every secured request on this page.</p>
+      <label>Username</label><input id="loginUser" data-testid="docs-login-username" value="admin" spellcheck="false" autocomplete="off" />
+      <label>Password</label><input id="loginPass" data-testid="docs-login-password" value="admin123" spellcheck="false" autocomplete="off" />
+      <div class="m-row">
+        <button class="btn btn-login" id="loginAdminBtn" data-testid="docs-login-admin">Log in as admin</button>
+        <button class="btn btn-secondary" id="loginUserBtn" data-testid="docs-login-user">Log in as user</button>
+      </div>
+      <label style="margin-top:16px">Or paste a bearer token</label><input id="tokenInput" data-testid="docs-token-input" placeholder="paste token" spellcheck="false" autocomplete="off" />
+      <div class="loginStatus" id="loginStatus" data-testid="docs-login-status">Not signed in.</div>
+      <div class="m-row">
+        <button class="btn btn-secondary" id="modalDone">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- settings drawer: same controls as the app -->
+<div class="drawer-scrim" id="drawerScrim"></div>
+<aside class="drawer" id="drawer" data-testid="settings-drawer" aria-label="Settings">
+  <div class="d-head">
+    <h3>Settings</h3>
+    <button class="x" data-testid="settings-close" aria-label="Close settings" id="drawerClose">&times;</button>
+  </div>
+  <div class="d-body">
+    <div class="d-sec">
+      <h4>Environment</h4>
+      <label class="field-lbl" for="baseUrl">API base URL</label>
+      <input class="field-inp" id="baseUrl" data-testid="base-url-input" spellcheck="false" autocomplete="off" />
+      <button class="btn-drawer" data-testid="settings-test-api" id="testApiBtn">Test connection (GET /api/ping)</button>
+      <div class="d-status" id="pingStatus" data-testid="ping-status" aria-live="polite"></div>
+    </div>
+    <div class="d-sec">
+      <h4>Demo data</h4>
+      <button class="btn-drawer" data-testid="settings-reset" id="resetBtn">Reset demo data (POST /api/reset)</button>
+      <p class="hint">Removes all Bookings and restores the seeded 100+ Meeting Rooms. Run it before a suite so every run starts identical.</p>
+      <div class="d-status" id="resetStatus" data-testid="reset-status" aria-live="polite"></div>
+    </div>
+    <div class="d-sec">
+      <h4>Credentials</h4>
+      <button class="btn-drawer" data-testid="settings-show-creds" id="credsBtn">Show credentials</button>
+      <div id="credsArea" hidden style="margin-top:10px">
+        <div class="credchip"><span><b>Admin (full access)</b><code>admin / admin123</code></span><button class="copy" data-testid="copy-admin">Copy</button></div>
+        <div class="credchip"><span><b>User (booking access)</b><code>user / user123</code></span><button class="copy" data-testid="copy-user">Copy</button></div>
+        <div class="credchip"><span><b>API key header</b><code>X-API-Key: meetspacesync-key-2026</code></span><button class="copy" data-testid="copy-apikey">Copy</button></div>
+        <div class="credchip"><span><b>Basic auth</b><code>meetspace / basic123</code></span><button class="copy" data-testid="copy-basic">Copy</button></div>
+      </div>
+    </div>
+    <div class="d-sec">
+      <h4>App</h4>
+      <a class="btn-drawer" href="/" target="_blank" rel="noopener" data-testid="settings-open-app" style="text-decoration:none">Open the MeetSpaceSync UI</a>
+      <p class="hint">The app carries this same settings panel, so you can reset and test from either side.</p>
+    </div>
+  </div>
+</aside>
+
+<script>
+(function(){
+  var isFile = location.protocol.indexOf('http') !== 0;
+  var httpBase = isFile ? 'http://127.0.0.1:4300' : location.origin;
+  var apiBase = httpBase + '/api';
+  var baseUrlInput = document.getElementById('baseUrl');
+  var tokenInput = document.getElementById('tokenInput');
+  baseUrlInput.value = apiBase;
+  document.getElementById('baseShow').textContent = apiBase;
+  baseUrlInput.addEventListener('input', function(){ document.getElementById('baseShow').textContent = baseUrlInput.value || apiBase; });
+
+  /* When opened directly from disk (file://), root-relative links like "/" and
+     "/openapi.json" resolve against the filesystem, not the running app.
+     Repoint every in-app link to the served origin, and warn the reader. */
+  if (isFile) {
+    var fix = function(href){
+      if (!href) return href;
+      if (href.charAt(0) === '/') return httpBase + href;
+      return href;
+    };
+    [].slice.call(document.querySelectorAll('a[href^="/"]')).forEach(function(a){
+      a.setAttribute('href', fix(a.getAttribute('href')));
+      if (a.getAttribute('target') !== '_blank') a.setAttribute('target','_blank');
+    });
+    var banner = document.createElement('div');
+    banner.setAttribute('data-testid','file-mode-banner');
+    banner.style.cssText = 'background:#fff4e5;border:1px solid #f0c37a;color:#8a5a12;padding:10px 16px;border-radius:10px;margin:0 0 16px;font-size:13px';
+    banner.innerHTML = 'You\u2019re viewing these docs from a local file. Links now point at <b>'+httpBase+'</b>. Start the server (<code>node server.js</code>) so the app and live "Try it" calls work.';
+    var main = document.querySelector('main') || document.body;
+    main.insertBefore(banner, main.firstChild);
+  }
+
+  /* ---- settings drawer ---- */
+  var drawer = document.getElementById('drawer'), scrim = document.getElementById('drawerScrim');
+  function openDrawer(){ drawer.classList.add('open'); scrim.classList.add('open'); }
+  function closeDrawer(){ drawer.classList.remove('open'); scrim.classList.remove('open'); }
+  document.getElementById('gear').addEventListener('click', openDrawer);
+  document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+  scrim.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape'){ document.getElementById('overlay').classList.remove('open'); closeDrawer(); } });
+
+  function base(){ return baseUrlInput.value.replace(/[/]+$/,'') || apiBase; }
+  document.getElementById('testApiBtn').addEventListener('click', function(){
+    var el = document.getElementById('pingStatus'); el.className='d-status'; el.textContent='Checking…';
+    fetch(base()+'/ping').then(function(r){ return r.json(); })
+      .then(function(d){ el.className='d-status ok connection-indicator'; el.textContent='Connected to '+d.app+' '+d.version+' — API is responding normally.'; })
+      .catch(function(e){ el.className='d-status err'; el.textContent='Cannot reach '+base()+'. Is the server running? ('+e.message+')'; });
+  });
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    if(!window.confirm('Reset demo data? This restores the original seeded company and permanently discards any changes made in this session.')) return;
+    var el = document.getElementById('resetStatus'); el.className='d-status'; el.textContent='Resetting…';
+    fetch(base()+'/reset', { method:'POST', headers: tokenInput.value.trim()?{'Authorization':'Bearer '+tokenInput.value.trim()}:{} }).then(function(r){ return r.json(); })
+      .then(function(d){ el.className='d-status ok connection-indicator'; el.textContent='Reset complete — '+d.rooms+' Meeting Rooms restored and all demo Bookings cleared.'; })
+      .catch(function(e){ el.className='d-status err'; el.textContent='Reset failed: '+e.message; });
+  });
+  document.getElementById('credsBtn').addEventListener('click', function(){
+    var a = document.getElementById('credsArea'); a.hidden = !a.hidden;
+  });
+  var COPY = { 'copy-admin':'admin / admin123', 'copy-user':'user / user123', 'copy-apikey':'meetspacesync-key-2026', 'copy-basic':'meetspace / basic123' };
+  Object.keys(COPY).forEach(function(tid){
+    var btn = document.querySelector('[data-testid="'+tid+'"]');
+    btn.addEventListener('click', function(){
+      function done(){ var t = btn.textContent; btn.textContent='Copied'; setTimeout(function(){ btn.textContent=t; }, 1200); }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(COPY[tid]).then(done, done); else done();
+    });
+  });
+
+  /* ---- spec loading (served by the same process) ---- */
+  var SPEC = null;
+  var METHOD_ORDER = ['get','post','put','patch','delete'];
+  function el(tag, attrs, kids){
+    var e = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function(k){ if (k==='class') e.className=attrs[k]; else if (k==='html') e.innerHTML=attrs[k]; else e.setAttribute(k,attrs[k]); });
+    (kids||[]).forEach(function(c){ if (c) e.appendChild(typeof c==='string'?document.createTextNode(c):c); });
+    return e;
+  }
+  function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+  function refNode(ref){
+    var parts = String(ref).replace(/^#\//,'').split('/');
+    var node = SPEC;
+    for (var i=0;i<parts.length;i++){ node = node && node[parts[i]]; }
+    return node || {};
+  }
+  function schemaByRef(ref){ return refNode(ref); }
+
+  /* Dates that sit in the sample bodies would go stale and every Try it out
+     call would come back with "Choose a valid Booking Date.". Any field marked
+     x-dynamic, or typed as a date without its own example, is generated live. */
+  function dynamicValue(kind){
+    var d = new Date();
+    if (kind === 'tomorrow' || kind === undefined) d.setDate(d.getDate()+1);
+    if (kind === 'today') { /* keep today */ }
+    var z = function(n){ return String(n).padStart(2,'0'); };
+    return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());
+  }
+  function resolveExample(schema, depth){
+    depth = depth||0; if (!schema||depth>6) return {};
+    if (schema.$ref) return resolveExample(schemaByRef(schema.$ref), depth+1);
+    if (schema['x-dynamic']) return dynamicValue(schema['x-dynamic']);
+    if (schema.format === 'date' && schema.example === undefined) return dynamicValue('tomorrow');
+    if (schema.example !== undefined) return schema.example;
+    if (Array.isArray(schema.enum) && schema.enum.length) return schema.enum[0];
+    if (schema.type === 'object' || schema.properties){
+      var o = {}; var props = schema.properties||{};
+      Object.keys(props).forEach(function(k){ o[k] = resolveExample(props[k], depth+1); });
+      return o;
+    }
+    if (schema.type === 'array') return [resolveExample(schema.items, depth+1)];
+    if (schema.type === 'integer' || schema.type === 'number') return schema.example!==undefined?schema.example:0;
+    if (schema.type === 'boolean') return schema.example!==undefined?schema.example:true;
+    return schema.example!==undefined?schema.example:'string';
+  }
+  function schemaText(schema){ try { return JSON.stringify(resolveExample(schema), null, 2); } catch(e){ return '{}'; } }
+  function reqBodySchema(op){ if (!op.requestBody||!op.requestBody.content) return null; var c = op.requestBody.content['application/json']; return c?(c.schema||c.example&&{example:c.example}):null; }
+
+  function buildOp(pathKey, method, op){
+    var secured = !!op.security;
+    var wrap = el('div', { class:'op '+method, id: slug(method+'-'+pathKey), 'data-testid':'op-'+method+'-'+slug(pathKey) });
+    var lock = secured ? el('span', { class:'op-lock', title:'Requires a token', html:'<svg viewBox="0 0 20 20" fill="#8b94a7"><path d="M10 1a4 4 0 0 0-4 4v2H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1V5a4 4 0 0 0-4-4zm2 6H8V5a2 2 0 1 1 4 0v2z"/></svg>' }) : null;
+    var head = el('div', { class:'op-head' }, [ el('span',{class:'verb'},[method]), el('span',{class:'op-path'},[pathKey]), el('span',{class:'op-sum'},[op.summary||'']), lock ]);
+    var body = el('div', { class:'op-body' });
+    if (op.description) body.appendChild(el('div',{class:'op-desc'},[op.description]));
+    var params = op.parameters||[];
+    if (params.length){
+      body.appendChild(el('div',{class:'section-label'},['Parameters']));
+      var tbl = el('table',{class:'tbl'},[ el('tr',{},[el('th',{},['Name']),el('th',{},['In']),el('th',{},['Type']),el('th',{},['Description'])]) ]);
+      params.forEach(function(p){ tbl.appendChild(el('tr',{},[
+        el('td',{},[el('span',{class:'pname'},[p.name]), p.required?el('span',{class:'req'},['required']):null]),
+        el('td',{},[el('span',{class:'ptype'},[p.in])]),
+        el('td',{},[el('span',{class:'ptype'},[(p.schema&&p.schema.type)||''])]),
+        el('td',{},[p.description||'']) ])); });
+      body.appendChild(tbl);
+    }
+    var rb = reqBodySchema(op);
+    if (rb){ body.appendChild(el('div',{class:'section-label'},['Request body ', el('span',{class:'ptype'},['application/json'])])); body.appendChild(el('div',{class:'schema-box'},[schemaText(rb)])); }
+    body.appendChild(el('div',{class:'section-label'},['Responses']));
+    Object.keys(op.responses||{}).forEach(function(code){
+      var resp = op.responses[code];
+      if (resp && resp.$ref) resp = refNode(resp.$ref);
+      body.appendChild(el('div',{class:'resp-row'},[ el('span',{class:'resp-code c'+String(code)[0]},[code]), el('span',{},[(resp&&resp.description)||'']) ]));
+      var media = resp && resp.content && resp.content['application/json'];
+      if (media && (media.example !== undefined || media.schema)){
+        var sample = media.example !== undefined ? media.example : resolveExample(media.schema);
+        var text = ''; try { text = JSON.stringify(sample, null, 2); } catch(e){ text = ''; }
+        if (text) body.appendChild(el('div',{class:'schema-box resp-sample','data-testid':'response-example-'+code},[text]));
+      }
+    });
+    body.appendChild(buildTry(pathKey, method, op, params, rb));
+    head.addEventListener('click', function(){ body.classList.toggle('open'); });
+    wrap.appendChild(head); wrap.appendChild(body); return wrap;
+  }
+
+  function buildTry(pathKey, method, op, params, rb){
+    var box = el('div',{class:'tryout'});
+    var toggle = el('button',{class:'btn btn-try'},['Try it out']);
+    var clear = el('button',{class:'btn btn-clear'},['Clear']);
+    var fields = el('div',{class:'try-fields'});
+    var inputs = {};
+    params.forEach(function(p){
+      fields.appendChild(el('label',{},[p.name+'  ('+p.in+')'+(p.required?'  *':'')]));
+      var inp = el('input',{ value:(p.schema&&p.schema.default!==undefined)?String(p.schema.default):'', placeholder:p.description||'' });
+      inputs[p.in+':'+p.name] = inp; fields.appendChild(inp);
+    });
+    var bodyArea = null;
+    if (rb){ fields.appendChild(el('label',{},['Request body (JSON)'])); bodyArea = el('textarea',{},[schemaText(rb)]); fields.appendChild(bodyArea); }
+    var exec = el('button',{class:'btn btn-exec'},['Execute']);
+    var out = el('div',{class:'resp-out'});
+    toggle.addEventListener('click', function(){ var on = fields.classList.toggle('open'); toggle.classList.toggle('active', on); });
+    clear.addEventListener('click', function(){ out.classList.remove('open'); out.innerHTML=''; });
+    exec.addEventListener('click', function(){ sendTry(pathKey, method, params, inputs, bodyArea, out, op); });
+    fields.appendChild(exec); box.appendChild(toggle); box.appendChild(clear); box.appendChild(fields); box.appendChild(out);
+    return box;
+  }
+
+  function secured(op){
+    if (!op || !op.security) return false;
+    return op.security.some(function(entry){ return Object.keys(entry).indexOf('bearerAuth') !== -1; });
+  }
+
+  function sendTry(pathKey, method, params, inputs, bodyArea, out, op){
+    var b = base();
+    var missing = [];
+    params.forEach(function(p){ if (p.in==='path' && inputs['path:'+p.name].value.trim()==='') missing.push(p.name); });
+    if (missing.length){ out.classList.add('open'); out.innerHTML=''; out.appendChild(el('div',{class:'param-warn'},['Please fill the required path value(s): '+missing.join(', ')])); return; }
+    var path = pathKey, query = [], headers = {};
+    params.forEach(function(p){ var v = inputs[p.in+':'+p.name].value; if (v==='') return;
+      if (p.in==='path') path = path.replace('{'+p.name+'}', encodeURIComponent(v));
+      else if (p.in==='query') query.push(encodeURIComponent(p.name)+'='+encodeURIComponent(v));
+      else if (p.in==='header') headers[p.name]=v; });
+    var url = b + path + (query.length?'?'+query.join('&'):'');
+    var token = tokenInput.value.trim();
+    /* A header typed into the parameter list wins over the stored token, so the
+       Basic auth endpoint can be exercised while a Bearer token is authorized. */
+    if (token && !headers['Authorization']) headers['Authorization'] = 'Bearer '+token;
+    if (!token && !headers['Authorization'] && secured(op)){
+      out.classList.add('open'); out.innerHTML='';
+      out.appendChild(el('div',{class:'param-warn'},['This endpoint needs a token. Press Authorize at the top of the page, log in as admin, then run Execute again.']));
+      return;
+    }
+    var opts = { method: method.toUpperCase(), headers: headers };
+    if (bodyArea && bodyArea.value.trim() && opts.method!=='GET' && opts.method!=='HEAD'){ headers['Content-Type']='application/json'; opts.body = bodyArea.value; }
+    out.classList.add('open'); out.innerHTML='';
+    out.appendChild(el('div',{class:'status-line'},['Sending '+opts.method+' '+url+' ...']));
+    var t0 = Date.now();
+    fetch(url, opts).then(function(res){
+      var ms = Date.now()-t0;
+      return res.text().then(function(text){
+        var pretty = text; try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch(e){}
+        out.innerHTML='';
+        out.appendChild(el('div',{class:'status-line'},['HTTP '+res.status+' '+res.statusText+'  ('+ms+' ms)']));
+        out.appendChild(el('div',{class:'resp-box'},[pretty||'(empty response)']));
+      });
+    }).catch(function(err){
+      out.innerHTML='';
+      out.appendChild(el('div',{class:'status-line'},['Request failed']));
+      out.appendChild(el('div',{class:'resp-box'},[String(err.message)+'\n\nIs the server running at '+b+' ? Start it with: node server.js']));
+    });
+  }
+
+  function render(){
+    document.getElementById('apiTitle').firstChild.textContent = SPEC.info.title + ' ';
+    document.getElementById('apiVersion').textContent = SPEC.info.version;
+    document.getElementById('apiDesc').textContent = SPEC.info.description || '';
+    var groups = {}, order = (SPEC.tags||[]).map(function(t){ return t.name; });
+    Object.keys(SPEC.paths).forEach(function(pathKey){
+      var methods = SPEC.paths[pathKey];
+      METHOD_ORDER.forEach(function(method){ if (!methods[method]) return; var op = methods[method];
+        var tag = (op.tags&&op.tags[0])||'Other'; if (order.indexOf(tag)===-1) order.push(tag);
+        (groups[tag]=groups[tag]||[]).push({ pathKey:pathKey, method:method, op:op }); });
+    });
+    var content = document.getElementById('content'); content.innerHTML='';
+    var nav = document.getElementById('nav'); nav.innerHTML='';
+    order.forEach(function(tag){
+      var ops = groups[tag]; if (!ops||!ops.length) return;
+      var tagDef = (SPEC.tags||[]).filter(function(t){ return t.name===tag; })[0];
+      var sectionId = 'tag-'+slug(tag);
+      var navlink = el('a',{class:'navlink'},[tag, el('span',{class:'count'},[String(ops.length)])]);
+      navlink.addEventListener('click', function(){ document.getElementById(sectionId).scrollIntoView({behavior:'smooth'}); });
+      nav.appendChild(navlink);
+      var section = el('div',{class:'tag-section', id:sectionId});
+      var headEl = el('div',{class:'tag-head'},[ el('h2',{},[tag]), el('span',{class:'tag-desc'},[tagDef?tagDef.description||'':'']), el('span',{class:'chev', html:'&#9662;'}) ]);
+      headEl.addEventListener('click', function(){ section.classList.toggle('collapsed'); });
+      section.appendChild(headEl);
+      ops.forEach(function(o){ section.appendChild(buildOp(o.pathKey, o.method, o.op)); });
+      content.appendChild(section);
+    });
+  }
+
+  document.getElementById('filterInput').addEventListener('input', function(){
+    var q = this.value.toLowerCase();
+    document.querySelectorAll('.op').forEach(function(op){
+      var text = op.querySelector('.op-path').textContent + ' ' + (op.querySelector('.op-sum').textContent||'');
+      op.style.display = text.toLowerCase().indexOf(q)!==-1 ? '' : 'none';
+    });
+  });
+
+  /* authorize modal */
+  function openModal(){ document.getElementById('overlay').classList.add('open'); }
+  function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+  document.getElementById('authorizeBtn').addEventListener('click', openModal);
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalDone').addEventListener('click', closeModal);
+  document.getElementById('overlay').addEventListener('click', function(e){ if (e.target===this) closeModal(); });
+  function markAuthorized(on, label){
+    var btn = document.getElementById('authorizeBtn'); btn.classList.toggle('on', on);
+    btn.lastChild.textContent = on?' Authorized':' Authorize';
+    document.getElementById('loginStatus').textContent = label;
+  }
+  function login(username, password){
+    document.getElementById('loginStatus').textContent = 'Signing in...';
+    fetch(base()+'/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:username,password:password}) })
+      .then(function(r){ return r.json(); })
+      .then(function(data){ if (data&&data.token){ tokenInput.value = data.token; markAuthorized(true, 'Signed in as '+data.user.name+' ('+data.user.role+'). Bearer token is ready for secured endpoints.'); } else { markAuthorized(false, (data&&data.error&&data.error.message)||'Login failed. Check the username and password.'); } })
+      .catch(function(e){ markAuthorized(false, 'Login failed: '+e.message); });
+  }
+  document.getElementById('loginAdminBtn').addEventListener('click', function(){ login(document.getElementById('loginUser').value.trim()||'admin', document.getElementById('loginPass').value); });
+  document.getElementById('loginUserBtn').addEventListener('click', function(){ document.getElementById('loginUser').value='user'; document.getElementById('loginPass').value='user123'; login('user','user123'); });
+  tokenInput.addEventListener('input', function(){ markAuthorized(!!tokenInput.value.trim(), tokenInput.value.trim()?'Token set manually.':'Not signed in.'); });
+
+  /* load the spec from the server; clear message when opened from disk */
+  fetch(httpBase + '/openapi.json').then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(spec){ SPEC = spec; render(); })
+    .catch(function(){
+      document.getElementById('content').innerHTML =
+        '<div style="border:1px solid #efcbc7;background:#f9e7e5;color:#b23227;border-radius:12px;padding:18px 20px;font-weight:600">'+
+        'Could not load openapi.json from '+httpBase+'. Start the server with <code>node server.js</code> and open this page at '+
+        '<a href="http://127.0.0.1:4300/docs.html" style="color:#b23227;text-decoration:underline">http://127.0.0.1:4300/docs.html</a>.</div>';
+    });
+})();
+</script>
+</body>
+</html>
